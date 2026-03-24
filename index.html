@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Inventario en OpenShift</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; text-align: center; }
+        input { padding: 10px; width: 70%; }
+        button { padding: 10px; cursor: pointer; background: #0066cc; color: white; border: none; }
+        ul { list-style: none; padding: 0; margin-top: 20px; }
+        li { background: #f4f4f4; margin: 5px 0; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>📦 Inventario Pro</h1>
+    <input type="text" id="itemInput" placeholder="Nombre del objeto...">
+    <button onclick="agregar()">Agregar</button>
+
+    <ul id="lista"></ul>
+
+    <script>
+        async function cargar() {
+            const res = await fetch('/api/objetos');
+            const datos = await res.json();
+            const lista = document.getElementById('lista');
+            lista.innerHTML = datos.map(d => `<li>${d.objeto}</li>`).join('');
+        }
+
+        async function agregar() {
+            const input = document.getElementById('itemInput');
+            await fetch('/api/objetos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ nombre: input.value })
+            });
+            input.value = '';
+            cargar();
+        }
+
+        cargar(); // Cargar al abrir la página
+    </script>
+</body>
+</html>
