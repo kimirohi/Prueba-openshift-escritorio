@@ -47,6 +47,18 @@ app.post('/api/objetos', async (req, res) => {
   }
 });
 
+// 4. NUEVA RUTA: Ruta para editar un objeto
+app.put('/api/objetos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body;
+  try {
+    await pool.query('UPDATE inventario SET objeto = $1 WHERE id = $2', [nombre, id]);
+    res.send('Objeto actualizado');
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });

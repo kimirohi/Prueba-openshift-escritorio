@@ -5,10 +5,12 @@
     <title>Mi Inventario en OpenShift</title>
     <style>
         body { font-family: sans-serif; max-width: 500px; margin: 50px auto; text-align: center; }
-        input { padding: 10px; width: 70%; }
-        button { padding: 10px; cursor: pointer; background: #0066cc; color: white; border: none; }
+        input[type="text"] { padding: 10px; width: 65%; }
+        button { padding: 10px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px;}
+        .btn-editar { background: #ffaa00; font-size: 0.8em; padding: 5px 10px; margin-left: 10px; }
         ul { list-style: none; padding: 0; margin-top: 20px; }
-        li { background: #f4f4f4; margin: 5px 0; padding: 10px; border-radius: 4px; }
+        li { background: #f4f4f4; margin: 5px 0; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;}
+        .item-texto { flex-grow: 1; text-align: left; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -19,15 +21,26 @@
     <ul id="lista"></ul>
 
     <script>
+        // Cargar lista desde la base de datos
         async function cargar() {
             const res = await fetch('/api/objetos');
             const datos = await res.json();
             const lista = document.getElementById('lista');
-            lista.innerHTML = datos.map(d => `<li>${d.objeto}</li>`).join('');
+            
+            // Generamos el HTML de cada elemento, incluyendo el botón de Editar
+            lista.innerHTML = datos.map(d => `
+                <li>
+                    <span class="item-texto" id="obj-${d.id}">${d.objeto}</span>
+                    <button class="btn-editar" onclick="editar(${d.id})">✏️ Editar</button>
+                </li>
+            `).join('');
         }
 
+        // Agregar un nuevo elemento
         async function agregar() {
             const input = document.getElementById('itemInput');
+            if (!input.value.trim()) return; // Evitar enviar vacíos
+            
             await fetch('/api/objetos', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -35,6 +48,25 @@
             });
             input.value = '';
             cargar();
+        }
+
+        // NUEVA FUNCIÓN: Editar un elemento existente
+        async function editar(id) {
+            // Obtenemos el texto actual para mostrarlo en el cuadro de diálogo
+            const textoActual = document.getElementById(`obj-${id}`).innerText;
+            
+            // Pedimos al usuario el nuevo nombre
+            const nuevoNombre = prompt("Edita el nombre del objeto:", textoActual);
+            
+            // Si el usuario escribió algo y no canceló
+            if (nuevoNombre !== null && nuevoNombre.trim() !== "") {
+                await fetch(`/api/objetos/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nombre: nuevoNombre })
+                });
+                cargar(); // Recargar la lista para ver los cambios
+            }
         }
 
         cargar(); // Cargar al abrir la página
